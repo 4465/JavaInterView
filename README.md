@@ -6,13 +6,31 @@
 
 ## 面试清单
 
-1. JSP
-2. Servlet
-3. Mysql
-4. Spring
-5. SpringBoot
-6. SpringCloud
-7. SpringMVC
-8. Tomcat
-9. Github
+1. java基础
+
+2. JVM
+
+3. 设计模式
+
+4. 并发
+
+5. jsp
+
+6. Servlet
+
+7. Mysql
+
+8. Spring
+
+9. SpringBoot
+
+10. SpringCloud
+
+11. SpringMVC
+
+12. Tomcat
+
+13. Github
+
+    
 
