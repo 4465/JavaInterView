@@ -287,3 +287,357 @@ class LatchDemo implements Runnable {
 }
 ```
 
+## 五、Callable接口
+
+- Java 5.0 在 java.util.concurrent 提供了一个新的创建执行 线程的方式：Callable 接口
+- Callable 接口类似于Runnable，两者都是为那些其实例可 能被另一个线程执行的类设计的。但是 Runnable 不会返 回结果，并且无法抛出经过检查的异常。
+- Callable 需要依赖FutureTask ，FutureTask也可以用作闭锁。
+
+```java
+package com.xianfeng.demo01;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+
+/**
+ * 创建执行线程的方式三：实现Callable接口,相较于实现RUnable接口的方式，方法可以有返回值，并且可以抛出异常
+ * 执行Collable方式，需要FutureTask实现类的支持，用于接受运算结果FutureTask是Future接口的实现类
+ */
+public class TestThread2 {
+
+    public static void main(String[] args) {
+        ThreadDemo td = new ThreadDemo();
+        //执行Collable方式，需要FutureTask实现类的支持，用于接受运算结果
+        FutureTask<Integer>  result = new FutureTask<>(td);
+
+        new Thread(result).start();
+
+         //接受线程运算结果
+        try {
+            Integer sum = result.get();    //FutureTask也可以用于闭锁的操作
+            System.out.println(sum);
+            System.out.println("=============================");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+
+}
+
+class ThreadDemo implements Callable<Integer>{
+    @Override
+    public Integer call() throws Exception {
+        int sum = 0;
+        for (int i = 0; i <= Integer.MAX_VALUE; i++) {
+            sum += i;
+        }
+        return sum;
+    }
+}
+
+```
+
+## 六、Condition线程通信
+
+
+
+## 七、线程按序交替
+
+> 编写一个程序，开启 3 个线程，这三个线程的ID 分别为 A、B、C，每个线程将自己的ID 在屏幕上打印 10 遍，要 求输出的结果必须按顺序显示。
+>
+> 如：ABCABCABC…… 依次递归
+
+```java
+package com.xfnlp.JUC;
+
+
+
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 编写一个程序，开启 3 个线程，这三个线程的ID 分别为
+ * A、B、C，每个线程将自己的ID 在屏幕上打印 10 遍，要
+ * 求输出的结果必须按顺序显示。
+ */
+public class TestABCAlternate {
+    public static void main(String[] args) {
+        AlternateDemo ad = new AlternateDemo();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 20; i++) {
+                    ad.loopA(i);
+                }
+            }
+        },"A").start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 20; i++) {
+                    ad.loopB(i);
+                }
+            }
+        },"B").start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 20; i++) {
+                    ad.loopC(i);
+                    System.out.println("--------------------------");
+                }
+            }
+        },"C").start();
+
+    }
+}
+
+
+class AlternateDemo{
+
+    private int number = 1;//当前正在执行线程的标记
+
+    private Lock lock = new ReentrantLock();
+    private Condition condition1 = lock.newCondition();
+    private Condition condition2 = lock.newCondition();
+    private Condition condition3 = lock.newCondition();
+
+    public void loopA(int totalLoop){
+        lock.lock();
+
+        try {
+            //1.判断
+            if(number != 1){
+                condition1.await();
+            }
+            else{//2.打印
+                for (int i = 0; i < 5; i++) {
+                    System.out.println(Thread.currentThread().getName() + "\t" + i + "\t" + totalLoop);
+                }
+                //3.唤醒
+                number = 2;
+                condition2.signal();
+            }
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    public void loopB(int totalLoop){
+        lock.lock();
+
+        try {
+            //1.判断
+            if(number != 2){
+                condition2.await();
+            }
+            else{//2.打印
+                for (int i = 0; i < 5; i++) {
+                    System.out.println(Thread.currentThread().getName() + "\t" + i + "\t" + totalLoop);
+                }
+                //3.唤醒
+                number = 3;
+                condition3.signal();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    public void loopC(int totalLoop){
+        lock.lock();
+
+        try {
+            //1.判断
+            if(number != 3){
+                condition3.await();
+            }
+            else{//2.打印
+                for (int i = 0; i < 5; i++) {
+                    System.out.println(Thread.currentThread().getName() + "\t" + i + "\t" + totalLoop);
+                }
+                //3.唤醒
+                number = 1;
+                condition1.signal();
+            }
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+## 八、ReadWriteLock 读写锁
+
+​		ReadWriteLock 维护了一对相关的锁，一个用于只读操作， 另一个用于写入操作。只要没有writer，读取锁可以由 多个reader 线程同时保持。写入锁是独占的。
+
+​		ReadWriteLock 读取操作通常不会改变共享资源，但执行 写入操作时，必须独占方式来获取锁。对于读取操作占 多数的数据结构。 ReadWriteLock 能提供比独占锁更高 的并发性。而对于只读的数据结构，其中包含的不变性 可以完全不需要考虑加锁操作。
+
+```java
+package com.xfnlp.JUC;
+
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+/*
+ * 1. ReadWriteLock : 读写锁
+ * 
+ * 写写/读写 需要“互斥”
+ * 读读 不需要互斥
+ * 
+ */
+public class TestReadWriteLock {
+
+   public static void main(String[] args) {
+      ReadWriteLockDemo rw = new ReadWriteLockDemo();
+      
+      new Thread(new Runnable() {
+         
+         @Override
+         public void run() {
+            rw.set((int)(Math.random() * 101));
+         }
+      }, "Write:").start();
+      
+      
+      for (int i = 0; i < 100; i++) {
+         new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+               rw.get();
+            }
+         }).start();
+      }
+   }
+   
+}
+
+class ReadWriteLockDemo{
+   
+   private int number = 0;
+   
+   private ReadWriteLock lock = new ReentrantReadWriteLock();
+   
+   //读
+   public void get(){
+      lock.readLock().lock(); //上锁
+      
+      try{
+         System.out.println(Thread.currentThread().getName() + " : " + number);
+      }finally{
+         lock.readLock().unlock(); //释放锁
+      }
+   }
+   
+   //写
+   public void set(int number){
+      lock.writeLock().lock();
+      
+      try{
+         System.out.println(Thread.currentThread().getName());
+         this.number = number;
+      }finally{
+         lock.writeLock().unlock();
+      }
+   }
+}
+```
+
+九、线程八锁
+
+> ```java
+> /*
+>  * 题目：判断打印的 "one" or "two" ？
+>  * 
+>  * 1. 两个普通同步方法，两个线程，标准打印， 打印? //one  two
+>  * 2. 新增 Thread.sleep() 给 getOne() ,打印? //one  two
+>  * 3. 新增普通方法 getThree() , 打印? //three  one   two
+>  * 4. 两个普通同步方法，两个 Number 对象，打印?  //two  one
+>  * 5. 修改 getOne() 为静态同步方法，打印?  //two   one
+>  * 6. 修改两个方法均为静态同步方法，一个 Number 对象?  //one   two
+>  * 7. 一个静态同步方法，一个非静态同步方法，两个 Number 对象?  //two  one
+>  * 8. 两个静态同步方法，两个 Number 对象?   //one  two
+>  */
+> ```
+
+```java
+package com.xfnlp.JUC;
+
+public class TestThread8Monitor {
+   
+   public static void main(String[] args) {
+      Number number = new Number();
+      Number number2 = new Number();
+      
+      new Thread(new Runnable() {
+         @Override
+         public void run() {
+            number.getOne();
+         } 
+      }).start();
+      
+      new Thread(new Runnable() {
+         @Override
+         public void run() {
+//          number.getTwo();
+            number2.getTwo();
+         }
+      }).start();
+      
+      /*new Thread(new Runnable() {
+         @Override
+         public void run() {
+            number.getThree();
+         }
+      }).start();*/
+      
+   }
+
+}
+
+class Number{
+   
+   public static synchronized void getOne(){//Number.class
+      try {
+         Thread.sleep(3000);
+      } catch (InterruptedException e) {
+      }
+      
+      System.out.println("one");
+   }
+   
+   public synchronized void getTwo(){//this
+      System.out.println("two");
+   }
+   
+   public void getThree(){
+      System.out.println("three");
+   }
+   
+}
+```
+
+线程八锁的关键：
+ * ①非静态方法的锁默认为  this,  静态方法的锁为 对应的 Class 实例
+ * ②某一个时刻内，只能有一个线程持有锁，无论几个方法。
