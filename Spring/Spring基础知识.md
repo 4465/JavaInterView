@@ -958,4 +958,465 @@ public @interface Autowired {
 - @AutoWired通过byType的方式实现，而且必须要求这个对象存在
 - @Resource默认通过nyName方式实现，如果找不到名字，则通过ByType实现，如果两个都找不到的情况下，就报错
 
-![image-20220306220143725](/img/注解装配.png)
+![](/img/注解装配.png)
+
+## 10、使用注解开发
+
+在Spring4之后要使用注解开发必须要保证aop的包导入了
+
+使用注解需要导入context约束，增加注解的支持
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+       ">
+    <context:annotation-config></context:annotation-config>
+</beans>
+```
+
+
+
+| 注解       | 作用                                               |
+| ---------- | -------------------------------------------------- |
+| @Component | 组件，放在类上，说明这个类被Spring管理了，就是bean |
+|            |                                                    |
+|            |                                                    |
+
+### 1、bean
+
+### 2、属性如何注入
+
+```java
+package com.xfnlp.pojo;
+
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+
+//等价于<bean id="user" class="com.xfnlp.pojo.User"/>
+@Component    //组件
+public class User {
+
+    /**
+     *相当于<bean id="user" class="com.xfnlp.pojo.User">
+     *         <property name="name" value="张三"></property>
+     *     </bean>
+     */
+//    @Value("张三")
+    public String name;
+
+    @Value("张三")
+    public void setName(String name){
+        this.name = name;
+    }
+}
+```
+
+### 3、衍生的注解
+
+@Component有几个衍生注解，我们在web开发中，会按照mvc三层架构分层
+
+- dao    【@Repository】
+- service  【@Service】
+- controller 【@Controller】
+
+这四个注解功能都是一样的，等价的，都是代表将某个类注册到Spring中，装配Bean
+
+### 4、自动装配
+
+![](/img/注解装配.png)
+
+### 5、作用域
+
+@Scope
+
+### 6、小结
+
+xml与注解
+
+- xml更加万能，适用于任何场合，维护简单方便
+- 注解不是自己的类是用不了，维护相对复杂
+
+最佳实践：
+
+- xml用来管理bean
+
+- 注解只负责完成属性的注入
+
+- 我们在使用的过程中，只需要注意一个问题，必须让注解生效，就需要开启注解的支持
+
+  ```xml
+  <!--指定要扫描的包，这个包下面的注解就会生效-->
+  <context:component-scan base-package="com.xfnlp"></context:component-scan>
+  <context:annotation-config></context:annotation-config>
+  ```
+
+  ## 11、使用java的方式配置Spring
+
+我们现在要完全不是用户Spring的xml配置了，全权交给java来做
+
+JavaConfig是Spring的一个子项目，在Spring4之后变成了核心功能
+
+> User.java
+>
+> ```java
+> package com.xfnlp.pojo;
+> 
+> 
+> import org.springframework.beans.factory.annotation.Value;
+> import org.springframework.stereotype.Component;
+> 
+> 
+> //这里这个注解的意思，就是说明这个类被Spring接管了，注册到了容器中
+> @Component
+> public class User {
+> 
+>     private String name;
+> 
+>     public String getName() {
+>         return name;
+>     }
+>     @Value("张三")
+>     public void setName(String name) {
+>         this.name = name;
+>     }
+> 
+>     @Override
+>     public String toString() {
+>         return "User{" +
+>                 "name='" + name + '\'' +
+>                 '}';
+>     }
+> }
+> ```
+>
+> MyConfig.java
+>
+> ```java
+> package com.xfnlp.config;
+> 
+> 
+> import com.xfnlp.pojo.User;
+> import org.springframework.context.annotation.Bean;
+> import org.springframework.context.annotation.ComponentScan;
+> import org.springframework.context.annotation.Configuration;
+> import org.springframework.context.annotation.Import;
+> import org.springframework.stereotype.Indexed;
+> 
+> @Configuration   //这个也会被Spring容器托管，注册到容器中，因为他本来就是一个@Component
+> //@Configuration 代表这是一个配置类，作用等价于beans.xml
+> 
+> @ComponentScan("com.xfnlp.pojo")
+> @Import(MyConfig2.class)
+> public class MyConfig {
+>     @Bean
+>     //注册一个bean，就相当于我们之前写的一个bean标签
+>     //这个方法的名字，就相当于bean标签中的id属性
+>     //这个方法的返回值，就相当于bean标签中的class属性
+>     public User getUser(){
+>         return new User();   //返回咬住的bean对象
+>     }
+> }
+> ```
+>
+> MyConfig2.java
+>
+> ```java
+> package com.xfnlp.config;
+> 
+> 
+> import org.springframework.context.annotation.Configuration;
+> 
+> @Configuration
+> 
+> public class MyConfig2 {
+> 
+> }
+> ```
+>
+> MyTest.java
+>
+> ```java
+> import com.xfnlp.config.MyConfig;
+> import com.xfnlp.pojo.User;
+> import org.springframework.context.ApplicationContext;
+> import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+> 
+> public class MyTest {
+> 
+>     public static void main(String[] args) {
+> 
+>         //如果完全使用了配置类方式，我们就只能使用 AnnotationConfigApplicationContext  获取上下文来获取容器，通过配置类的class的对象加载
+>         ApplicationContext context =  new AnnotationConfigApplicationContext(MyConfig.class);
+>         User getUser = (User) context.getBean("getUser");
+>         System.out.println(getUser.getName());
+>     }
+> }
+> ```
+
+这种纯java的配置方式，在SpringBoot中随处可见！
+
+## 11、代理模式
+
+代理模式是Spring APO的底层【SpringMVC和AOP面试必问】
+
+代理模式的分类：
+
+- 静态代理
+- 动态代理
+
+![image-20220307110559781](/img/代理模式.png)
+
+### 1、静态代理
+
+角色分析：
+
+- 抽象对象：一般会使用接口和抽象类来解决
+- 真实角色：被代理的角色
+- 代理角色：代理真实角色，代理真实的角色后，我们一般会做一些附属操作
+- 客户：访问代理对象的人
+
+代码步骤：
+
+1. 接口
+
+   ```java
+   package com.xfnlp.demo01;
+   
+   //租房
+   public interface Rent {
+       public void rent();
+   }
+   ```
+
+2. 真实角色
+
+   ```java
+   package com.xfnlp.demo01;
+   
+   
+   //房东
+   public class Host implements Rent{
+       public void rent(){
+           System.out.println("房东要出租房子");
+       }
+   }
+   ```
+
+3. 代理角色
+
+   ```java
+   package com.xfnlp.demo01;
+   
+   public class Proxy implements Rent{
+   
+       private Host host;
+   
+       public Proxy() {
+       }
+   
+       public Proxy(Host host) {
+           this.host = host;
+       }
+   
+       public void rent() {
+           seeHouse();
+           host.rent();
+           hetong();
+           fare();
+       }
+   
+       //看房
+       public void seeHouse(){
+           System.out.println("中介带你看房");
+       }
+   
+       //收中介费
+       public void fare(){
+           System.out.println("收中介费");
+       }
+   
+       //签合同
+       public void hetong(){
+           System.out.println("签租赁合同");
+       }
+   }
+   ```
+
+4. 客户端访问代理角色
+
+   ```java
+   package com.xfnlp.demo01;
+   
+   public class Client {
+   
+       public static void main(String[] args) {
+           //房东要出租房子
+           Host host = new Host();
+           //代理，中介帮房东子房子，但是中介会有一些额外的操作！
+           Proxy proxy = new Proxy(host);
+           //客户不用换面对房东，直接找中介即可
+           proxy.rent();
+       }
+   }
+   ```
+
+代理模式的好处：
+
+- 可以使真实角色的操作更加纯粹，不用取关注一些公共的业务
+- 公共业务交给了代理角色，实现了业务的分工
+- 公共业务发生扩展的时候，方便集中管理
+
+缺点：
+
+- 一个真实的角色就会产生一个代理角色，代码量会翻倍，开发效率会变低
+
+![image-20220307131734136](/img/静态代理再理解.png)
+
+### 2、动态代理
+
+- 动态代理和静态代理角色一样
+- 动态代理的代理类是动态生成的，不是我们直接写好的
+- 动态代理分为两大类：基于接口的动态代理、基于类的动态代理
+  - 基于接口---->JDK动态代理
+  - 基于类 ---->cglib
+  - java字节码实现  ---->javasist
+
+需要了解两个类：Proxy(代理)，InvocationHandler(调用处理程序)
+
+动态代理的好处
+
+- 可以使真实角色的操作更加纯粹，不用取关注一些公共的业务
+- 公共业务交给了代理角色，实现了业务的分工
+- 公共业务发生扩展的时候，方便集中管理
+- 一个动态代理类代理的是一个接口，一般就是对应一类业务
+
+## 12、AOP
+
+### 1、什么是AOP
+
+AOP (Aspect Oriented Programming)意为:面向切面编程,通过预编译方式和运行期动态代理实现程序功能的统一维护一-种技术。AOP是OOP的延续,是软件开发中的一-个热点,也是Spring框架中的一一个重要内容,是函数式编程的一种衍生范型。利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率。
+
+![image-20220307134914027](/img/AOP业务.png)
+
+### 2、AOP在Spring中的作用
+
+![image-20220307140347001](/img/AOP名词解释.png)
+
+![image-20220307140413010](/img/AOP.png)
+
+![image-20220307140505711](/img/AOP2.png)
+
+### 3、使用Spring实现AOP
+
+【重点】使用AOP织入，需要导入一个依赖包
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjweaver</artifactId>
+        <version>1.9.4</version>
+    </dependency>
+</dependencies>
+```
+
+方式一：使用Spring的API接口【主要SpringAPI接口】
+
+配置aop需要导入aop的约束
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd"
+>
+```
+
+方法二：自定义类实现AOP【主要是切面定义】
+
+方式三：使用注解实现
+
+## 13、整合Mybatis
+
+### 1、整合步骤
+
+步骤：
+
+1. 导入相关jar包
+
+   - jubit
+   - mybatis
+   - mysql数据库
+   - spring相关的
+   - aop织入
+   - mybatis-spring
+
+   ```xml
+   <dependencies>
+       <dependency>
+           <groupId>junit</groupId>
+           <artifactId>junit</artifactId>
+           <version>4.12</version>
+           <scope>test</scope>
+       </dependency>
+   
+       <dependency>
+           <groupId>mysql</groupId>
+           <artifactId>mysql-connector-java</artifactId>
+           <version>8.0.28</version>
+       </dependency>
+   
+       <dependency>
+           <groupId>org.mybatis</groupId>
+           <artifactId>mybatis</artifactId>
+           <version>3.5.3</version>
+       </dependency>
+   
+       <dependency>
+           <groupId>org.springframework</groupId>
+           <artifactId>spring-webmvc</artifactId>
+           <version>5.3.1</version>
+       </dependency>
+   
+       <dependency>
+           <groupId>org.springframework</groupId>
+           <artifactId>spring-jdbc</artifactId>
+           <version>5.3.16</version>
+       </dependency>
+   
+       <dependency>
+           <groupId>org.aspectj</groupId>
+           <artifactId>aspectjweaver</artifactId>
+           <version>1.9.4</version>
+       </dependency>
+   
+       <dependency>
+           <groupId>org.mybatis</groupId>
+           <artifactId>mybatis-spring</artifactId>
+           <version>2.0.7</version>
+       </dependency>
+   
+   </dependencies>
+   ```
+
+2. 编写配置文件
+
+3. 测试
+
+### 2、回顾MyBatis
+
+1. 编写实体类
+2. 编写核心配置文件
+3. 编写接口
+4. 编写Mapper.xml
+5. 测试
