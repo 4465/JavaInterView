@@ -345,54 +345,155 @@ Java实现多态有三个必要条件：继承、重写、向上转型。
    > - 3、 构造函数，每创建一个对象时就会执行一次。同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同。
    >
    > - ```java
-   >      public class Test {
-   >              /**
+   >   public class Test {
+   >           /**
    >               * 静态代码块
-   >               */
-   >              static{
-   >                  System.out.println("执行静态代码块...");
-   >              }
-   >           
-   >              /**
+   >            */
+   >           static{
+   >               System.out.println("执行静态代码块...");
+   >           }
+   >        
+   >           /**
    >               * 构造代码块
-   >               */
-   >              {
-   >                  System.out.println("执行构造代码块...");
-   >              }
-   >           
-   >              /**
+   >            */
+   >           {
+   >               System.out.println("执行构造代码块...");
+   >           }
+   >        
+   >           /**
    >               * 无参构造函数
-   >               */
-   >              public Test(){
-   >                  System.out.println("执行无参构造函数...");
-   >              }
-   >           
-   >              /**
+   >            */
+   >           public Test(){
+   >               System.out.println("执行无参构造函数...");
+   >           }
+   >        
+   >           /**
    >               * 有参构造函数
    >               * @param id
-   >               */
-   >              public Test(String id){
-   >                  System.out.println("执行有参构造函数...");
-   >              }
-   >           
-   >              public static void main(String[] args) {
-   >                  System.out.println("----------------------");
-   >                  new Test();
-   >                  System.out.println("----------------------");
-   >                  new Test("1");
-   >              }
+   >            */
+   >           public Test(String id){
+   >               System.out.println("执行有参构造函数...");
    >           }
-   >           -----------
-   >           Output:
-   >           执行静态代码块...
-   >           ----------------------
-   >           执行构造代码块...
-   >           执行无参构造函数...
-   >           ----------------------
-   >           执行构造代码块...
-   >           执行有参构造函数...
-   >           
+   >        
+   >           public static void main(String[] args) {
+   >               System.out.println("----------------------");
+   >               new Test();
+   >               System.out.println("----------------------");
+   >               new Test("1");
+   >           }
+   >        }
+   >        -----------
+   >        Output:
+   >        执行静态代码块...
+   >        ----------------------
+   >        执行构造代码块...
+   >        执行无参构造函数...
+   >        ----------------------
+   >        执行构造代码块...
+   >        执行有参构造函数...
+   >        
    >   ```
-   >
-   >   
+   >  ```
+   > 
+   > 
+   >  ```
+
+## 16、final关键字
+
+final是java的关键字，表示这部分是无法修改的。 使用到final的有三种情况：数据、方法、类 。
+
+1. final修饰变量
+
+   final主要应用与以下两个地方：
+
+   - 1、编译期常量，永远不可改变。===>只能使用基本类型
+
+   - 2、运行期初始化时，我们希望它不会被改变。    ===>既可以是基本数据类型，也可以是引用数据类型
+
+     > 基本数据类型不可变的是其内容，而引用数据类型不可变的是其引用，引用所指定的对象内容是可变的。 
+     >
+     > ```java
+     >  public class Person {
+     >             private String name;
+     >         
+     >             Person(String name){
+     >                 this.name = name;
+     >             }
+     >         
+     >             public String getName() {
+     >                 return name;
+     >             }
+     >         
+     >             public void setName(String name) {
+     >                 this.name = name;
+     >             }
+     >         }
+     >         
+     >         public class FinalTest {
+     >             private final String final_01 = "chenssy";    //编译期常量，必须要进行初始化，且不可更改
+     >             private final String final_02;                //构造器常量，在实例化一个对象时被初始化
+     >         
+     >             private static Random random = new Random();
+     >             private final int final_03 = random.nextInt(50);    //使用随机数来进行初始化
+     >         
+     >             //引用
+     >             public final Person final_04 = new Person("chen_ssy");    //final指向引用数据类型
+     >         
+     >             FinalTest(String final_02){
+     >                 this.final_02 = final_02;
+     >             }
+     >         
+     >             public String toString(){
+     >                 return "final_01 = " + final_01 +"   final_02 = " + final_02 + "   final_03 = " + final_03 +
+     >                        "   final_04 = " + final_04.getName();
+     >             }
+     >         
+     >             public static void main(String[] args) {
+     >                 System.out.println("------------第一次创建对象------------");
+     >                 FinalTest final1 = new FinalTest("cm");
+     >                 System.out.println(final1);
+     >                 System.out.println("------------第二次创建对象------------");
+     >                 FinalTest final2 = new FinalTest("zj");
+     >                 System.out.println(final2);
+     >                 System.out.println("------------修改引用对象--------------");
+     >                 final2.final_04.setName("chenssy");
+     >                 System.out.println(final2);
+     >             }
+     >         }
+     >         
+     >         ------------------
+     >         Output:
+     >         ------------第一次创建对象------------
+     >         final_01 = chenssy   final_02 = cm   final_03 = 34   final_04 = chen_ssy
+     >         ------------第二次创建对象------------
+     >         final_01 = chenssy   final_02 = zj   final_03 = 46   final_04 = chen_ssy
+     >         ------------修改引用对象--------------
+     >         final_01 = chenssy   final_02 = zj   final_03 = 46   final_04 = chenssy
+     > ```
+     >
+     > 
+
+2. fina修饰方法
+
+   - 方法锁定
+
+      所有被final标注的方法都是不能被继承、更改的 。方法锁定， 防止任何子类来对它的修改 
+
+   - 效率
+
+3. final修饰类
+
+   表明该类是最终类，不能被继承
+
+   > 对于final修饰的类来说，它的成员变量可以为final，也可以为非final。如果定义为final，那么final数据的规则同样适合它。而它的方法则会自动的加上final，因为final类是无法被继承，所以这个是默认的。 
+
+4. final修饰参数
+
+   参数不可改变
+
+   
+
+## 17、equals()
+
+![1646757480244](/img/equals.png)
 
