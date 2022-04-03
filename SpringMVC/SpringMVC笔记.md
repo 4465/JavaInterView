@@ -169,7 +169,7 @@ Spring版本：5.3.1
 
 请求控制器中每一个处理请求的方法成为控制器方法
 
-因为SpringMVC的控制器由一个POJO（普通的Java类）担任，因此需要通过@Controller注解将其标识为一个控制层组件，交给Spring的IoC容器管理，此时SpringMVC才能够识别控制器的存在
+因为SpringMVC的控制器由一个POJO（普通的Java类）担任，因此需要通过**@Controller注解将其标识为一个控制层组件，交给Spring的IoC容器管理**，此时SpringMVC才能够识别控制器的存在
 
 ```java
 @Controller
@@ -837,6 +837,9 @@ b>当前请求必须传输请求参数_method
 > - ```
 >   String paramValue = request.getParameter(this.methodParam);
 >   ```
+> ```
+> 
+> ```
 
 
 
