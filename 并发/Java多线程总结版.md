@@ -216,7 +216,7 @@ thread.start();
 
 ## 12. 线程阻塞的三种情况
 
-当线程因为某种原因放弃 CPU 使用权后，即让出了 CPU 时间片，暂时就会停止运行，知道线程进入可运行状态（`Runnable`），才有机会再次获得 CPU 时间片转入 `RUNNING` 状态。一般来讲，阻塞的情况可以分为如下三种：
+当线程因为某种原因放弃 CPU 使用权后，即让出了 CPU 时间片，暂时就会停止运行，直到线程进入可运行状态（`Runnable`），才有机会再次获得 CPU 时间片转入 `RUNNING` 状态。一般来讲，阻塞的情况可以分为如下三种：
 
 1. **等待阻塞（Object.wait -> 等待队列）** 
 
@@ -300,7 +300,7 @@ CAS 并发原语体现在 Java 语言中的 `sum.misc.Unsafe` 类中的各个方
 
 并发环境下，假设初始条件是A，去修改数据时，发现是A就会执行修改。但是看到的虽然是A，中间可能发生了A变B，B又变回A的情况。此时A已经非彼A，数据即使成功修改，也可能有问题。
 
-可以通过AtomicStampedReference**解决ABA问题**，它，一个带有标记的原子引用类，通过控制变量值的版本来保证CAS的正确性。
+可以通过AtomicStampedReference**解决ABA问题**，它，一个带有标记的原子引用类，通过控制变量值的版本来保证CAS的正确性。（加上版本号）
 
 **2. 循环时间长开销**
 
@@ -612,7 +612,6 @@ FixedThreadPool是一个典型且优秀的线程池，它具有线程池提高�
 ![阻塞队列](http://blog-img.coolsen.cn/img/20200722164307306.png)
 
 <center> 表格左侧是线程池，右侧为它们对应的阻塞队列，可以看到 5 种线程池对应了 3 种阻塞队列</center>
-
 1. LinkedBlockingQueue
    对于 FixedThreadPool 和 SingleThreadExector 而言，它们使用的阻塞队列是容量为 Integer.MAX_VALUE 的 LinkedBlockingQueue，可以认为是无界队列。由于 FixedThreadPool 线程池的线程数是固定的，所以没有办法增加特别多的线程来处理任务，这时就需要 LinkedBlockingQueue 这样一个没有容量限制的阻塞队列来存放任务。
 
