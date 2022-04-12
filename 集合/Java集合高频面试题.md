@@ -109,7 +109,6 @@ private void grow(int minCapacity) {
 
 * ArrayList 提供了更多的方法和特性，比如：addAll()，removeAll()，iterator() 等等。
 
-* 
 
 ## 7. HashMap的底层数据结构是什么？
 
