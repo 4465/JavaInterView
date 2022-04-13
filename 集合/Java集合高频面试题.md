@@ -1,3 +1,7 @@
+---
+typora-root-url: ./
+---
+
 ## 1. 常见的集合有哪些？
 
 Java集合类主要由两个根接口**Collection**和**Map**派生出来的，Collection派生出了三个子接口：List、Set、Queue（Java5新增的队列），因此Java集合大致也可分成List、Set、Queue、Map四种接口体系。
@@ -33,6 +37,10 @@ Map代表的是存储key-value对的集合，可根据元素的key来访问value
 - HashSet
 - TreeSet
 - TreeMap
+
+## 3.JUC集合框架
+
+![img](img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTExMDk3MjE=,size_16,color_FFFFFF,t_70)
 
 ## 3. Arraylist与 LinkedList 异同点？
 
