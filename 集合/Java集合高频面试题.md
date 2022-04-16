@@ -462,6 +462,10 @@ public boolean add(E e) {
 
 由于HashMap的K值本身就不允许重复，并且在HashMap中如果K/V相同时，会用新的V覆盖掉旧的V，然后返回旧的V，那么在HashSet中执行这一句话始终会返回一个false，导致插入失败，这样就保证了数据的不可重复性。
 
+## 27. HashSet如何检查重复
+
+​		对象加入HashSet时，HashSet会先计算对象的hashCode值来判断对象加入的位置，看该位置是否有值，如果没有，HashSet会假设对象没有重复出现，但是如果发现有值，这时会调用equals()方法来检查这两个对象是否真的相同，如果两者相同，HashSet就不会让其加入操作成功，如果不同的话，就会重新散列到其他位置，这样就大大减少了equals()的次数，相应就大大提高了执行速度。
+
 ## 28. Collection框架中实现比较要怎么做？
 
 第一种，实体类实现Comparable接口，并实现 compareTo(T t) 方法，称为**内部比较器。**
