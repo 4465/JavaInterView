@@ -1,3 +1,7 @@
+---
+
+---
+
 ## 1. 线程和进程有什么区别？
 
 线程具有许多传统进程所具有的特征，故又称为轻型进程(Light—Weight Process)或进程元；而把传统的进程称为重型进程(Heavy—Weight Process)，它相当于只有一个线程的任务。在引入了线程的操作系统中，通常一个进程都有若干个线程，至少包含一个线程。
@@ -278,7 +282,7 @@ JVM执行start方法，会另起一条线程执行thread的run方法，这才起
 
 > 人一个守护线程都是整个JVM中所有非守护线程的保姆
 
-![image-20220418165519792](/守护线程的理解.png)
+![](F:\学习\java面试\并发\img\守护线程的理解.png)
 
 ## 16. 了解Fork/Join框架吗？
 
@@ -504,7 +508,7 @@ synchronized 的非公平其实在源码中应该有不少地方，因为设计�
 
 ## 29. ThreadLocal是什么?
 
-ThreadLocal，即线程本地变量。如果你创建了一个ThreadLocal变量，那么访问这个变量的每个线程都会有这个变量的一个本地拷贝，多个线程操作这个变量的时候，实际是操作自己本地内存里面的变量，从而起到线程隔离的作用，避免了线程安全问题。
+ThreadLocal，即线程本地变量。如果你创建了一个ThreadLocal变量，那么访问这个变量的每个线程都会有这个变量的一个本地拷贝，多个线程操作这个变量的时候，实际是操作自己本地内存里面的变量，从而起到**线程隔离**的作用，避免了线程安全问题。
 
 ```java
 //创建一个ThreadLocal变量
@@ -519,7 +523,8 @@ static ThreadLocal<String> localVariable = new ThreadLocal<>();
 ## 30. ThreadLocal的实现原理
 
 - Thread类有一个类型为ThreadLocal.ThreadLocalMap的实例变量threadLocals，即每个线程都有一个属于自己的ThreadLocalMap。
-- ThreadLocalMap内部维护着Entry数组，每个Entry代表一个完整的对象，key是ThreadLocal本身，value是ThreadLocal的泛型值。
+  - ThreadLocalMap是ThreadLocal的静态内部类
+- ThreadLocalMap内部维护着Entry数组（继承自WeakReference），每个Entry代表一个完整的对象，key是ThreadLocal本身，value是ThreadLocal的泛型值。
 - 每个线程在往ThreadLocal里设置值的时候，都是往自己的ThreadLocalMap里存，读也是以某个ThreadLocal作为引用，在自己的map里找对应的key，从而实现了线程隔离。
 
 ThreadLocal内存结构图：
@@ -547,7 +552,13 @@ ThreadLocalMap中使用的 key 为 ThreadLocal 的弱引用，如下![img](data:
 
 弱引用比较容易被回收。因此，如果ThreadLocal（ThreadLocalMap的Key）被垃圾回收器回收了，但是因为ThreadLocalMap生命周期和Thread是一样的，它这时候如果不被回收，就会出现这种情况：ThreadLocalMap的key没了，value还在，这就会**「造成了内存泄漏问题」**。
 
-如何**「解决内存泄漏问题」**？使用完ThreadLocal后，及时调用remove()方法释放内存空间。
+如何**「解决内存泄漏问题」**？
+
+1. 使用完ThreadLocal后，及时调用remove()方法释放内存空间。
+
+2. JDK建议ThreadLocal定义为private static，这样ThreadLocal的弱引用问题则不存在了。
+
+   
 
 ## 32. 了解ReentrantLock吗？
 
@@ -582,20 +593,30 @@ ReetrantLock主要依靠AQS维护一个阻塞队列，多个线程对加锁时�
 
 * **submit()方法用于提交需要返回值的任务。线程池会返回一个future类型的对象，通过这个future对象可以判断任务是否执行成功**，并且可以通过future的get()方法来获取返回值，get()方法会阻塞当前线程直到任务完成，而使用 `get（long timeout，TimeUnit unit）`方法则会阻塞当前线程一段时间后立即返回，这时候有可能任务没有执行完。
 
-## 3. 你说下线程池核心参数？
+## 3. 你说下线程池核心参数？（七个）
 
 ------
 
-- corePoolSize ： 核心线程大小。线程池一直运行，核心线程就不会停止。
-- maximumPoolSize ：线程池最大线程数量。非核心线程数量=maximumPoolSize-corePoolSize
-- keepAliveTime ：非核心线程的心跳时间。如果非核心线程在keepAliveTime内没有运行任务，非核心线程会消亡。
-- workQueue ：阻塞队列。ArrayBlockingQueue，LinkedBlockingQueue等，用来存放线程任务。
-- defaultHandler ：饱和策略。ThreadPoolExecutor类中一共有4种饱和策略。通过实现**RejectedExecutionHandler**接口。
+- corePoolSize ： 代表核心线程数，也就是正常情况下创建工作的线程数，这些线程创建后并不会消除，而是一种常驻线程。线程池一直运行，核心线程就不会停止。（**核心线程回收是随着线程池一起回收的**）
+
+- maximumPoolSize ：代表最大线程数，它与核心线程数相对应，表示最大荀彧被创建的线程数，比如当前任务较多，将核心线程数用完了，还无法满足需求时，此时就会创建新的线程，但是线程池内线程总数不会超过最大线程数。非核心线程数量=maximumPoolSize-corePoolSize
+
+- keepAliveTime ：非核心线程的心跳时间。如果非核心线程在keepAliveTime内没有运行任务，非核心线程会消亡（核心线程不会消亡）。
+
+- unit：KeepAliveTime的时间单位
+
+- workQueue ：用来存放待执行的任务，假设我们核心线程都已经使用，还有任务进来则全部放入队列，直到整个队列被放满但任务还在持续进入则会开始创建新的线程
+
+- handler ：饱和策略（拒绝策略）。ThreadPoolExecutor类中一共有4种饱和策略。通过实现**RejectedExecutionHandler**接口。
+
+  有两种情况会产生拒绝，第一种是当我们调用shutdown等方法关闭线程池后，这时候及时线程池内部还有没执行完的任务正在执行，但是由于线程池已经关闭，我们再继续向线程池提交任务就会遭到拒绝；另一种情况就是当达到最大线程数，线程池已经没有能力继续处理新提交的任务时，也会遭到拒绝。
+
   - AbortPolicy ： 线程任务丢弃报错。默认饱和策略。
   - DiscardPolicy ： 线程任务直接丢弃不报错。
   - DiscardOldestPolicy ： 将workQueue**队首任务丢弃**，将最新线程任务重新加入队列执行。
   - CallerRunsPolicy ：线程池之外的线程直接调用run方法执行。
-- ThreadFactory ：线程工厂。新建线程工厂。
+
+- ThreadFactory ：实际上是一个线程工厂，用来生产线程执行任务，我们可以选择使用默认的创建工厂，产生的线程都在同一组内，拥有相同的优先级，且都不是守护线程。当然我们也可以选择自定义线程工厂，一般我们会根据业务来制定不同的线程工厂。
 
 ## 4. 线程池执行任务的流程？
 
@@ -604,6 +625,12 @@ ReetrantLock主要依靠AQS维护一个阻塞队列，多个线程对加锁时�
 1. 线程池执行execute/submit方法向线程池添加任务，当任务小于核心线程数corePoolSize，线程池中可以创建新的线程。
 2. 当任务大于核心线程数corePoolSize，就向阻塞队列添加任务。
 3. 如果阻塞队列已满，需要通过比较参数maximumPoolSize，在线程池创建新的线程，当线程数量大于maximumPoolSize，说明当前设置线程池中线程已经处理不了了，就会执行饱和策略。
+
+> 为什么先添加到阻塞队列而不是先创建最大线程？
+>
+> 在创建新线程的时候，是要获取全局锁的，这个时候其他线程就得阻塞，影响整体效率。
+>
+> 在核心线程已满时，如果任务继续增加那么放在队列中，等队列满了而任务还在增加那么就要创建临时线程了，这样代价低。
 
 ## 5. 常用的JAVA线程池有哪几种类型？
 
@@ -635,6 +662,12 @@ FixedThreadPool是一个典型且优秀的线程池，它具有线程池提高�
 
 ## 6. 线程池常用的阻塞队列有哪些?
 
+​		一般的队列只能保证作为一个优先长度的缓冲区，如果超出缓冲长度，就无法保留当前的任务了，阻塞队列通过阻塞可以保留住当前想要继续入队的任务
+
+​		阻塞队列可以保证任务队列中没有任务时阻塞获取任务的线程，使得线程进入wait状态，释放cpu资源。
+
+​		阻塞队列自带阻塞和唤醒的功能，不需要额外处理，无任务执行时，线程池利用阻塞队列的take方法挂起，从而维持核心线程的存活，不至于一直占用cpu资源。
+
 ![阻塞队列](http://blog-img.coolsen.cn/img/20200722164307306.png)
 
 <center> 表格左侧是线程池，右侧为它们对应的阻塞队列，可以看到 5 种线程池对应了 3 种阻塞队列</center>
@@ -653,11 +686,15 @@ FixedThreadPool是一个典型且优秀的线程池，它具有线程池提高�
 DelayedWorkQueue 的特点是内部元素并不是按照放入的时间排序，而是会按照延迟的时间长短对任务进行排序，内部采用的是“堆”的数据结构。之所以线程池 ScheduledThreadPool 和 SingleThreadScheduledExecutor 选择 DelayedWorkQueue，是因为它们本身正是基于时间执行任务的，而延迟队列正好可以把任务按时间进行排序，方便任务的执行。
 
 
-## 7. 源码中线程池是怎么复用线程的？
+## 7. 源码中线程池是怎么复用线程的？（线程池中线程复用原理）
 
 ------
 
-源码中ThreadPoolExecutor中有个内置对象Worker，每个worker都是一个线程，worker线程数量和参数有关，每个worker会while死循环从阻塞队列中取数据，**通过置换worker中Runnable对象，运行其run方法起到线程置换的效果**，这样做的好处是避免多线程频繁线程切换，提高程序运行性能。
+​		线程池将线程和任务进行解耦，线程是线程，任务时任务，摆脱了之前Thread创建线程时一个线程必须对应一个任务的限制。
+
+　　在线程池中，同一个线程可以从阻塞队列中不断的获取新任务执行，其核心原理在于线程池对Thread进行了封装，并不是每一次调用线程都会调用Thread.start()来创建新线程，而是让每个线程去执行循环任务，在这个循环任务中不停检查是否有任务需要被执行，如果有则直接执行，也就是调用任务中的run方法，将run方法当成一个普通方法执行，通过这种方式只使固定的线程就将所有任务run方法串联起来了。
+
+> 源码中ThreadPoolExecutor中有个内置对象Worker，线程池内的线程都被包装成一个Worker对象，worker线程数量和参数有关，每个worker会while死循环从阻塞队列中取数据，**通过置换worker中Runnable对象，运行其run方法起到线程置换的效果**，这样做的好处是避免多线程频繁线程切换，提高程序运行性能。
 
 ## 8. 如何合理配置线程池参数？
 
