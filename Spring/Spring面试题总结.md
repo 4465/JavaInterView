@@ -36,11 +36,13 @@ class Apple implements Fruit {
         System.out.println("Apple");
     }
 }
+
 class Orange implements Fruit {
     public void eat(){
         System.out.println("Orange");
     }
 }
+
 class Factory {
     public static Fruit getInstance(String ClassName) {
         Fruit f=null;
@@ -52,6 +54,7 @@ class Factory {
         return f;
     }
 }
+
 class Client {
     public static void main(String[] a) {
         Fruit f=Factory.getInstance("io.github.dunwu.spring.Apple");
@@ -105,7 +108,7 @@ class Client {
 
 ## 8、AOP 有哪些实现方式？
 
-实现 AOP 的技术，主要分为两大类：
+实现 AOP 的技术，主要分为两大类：  
 
 - 静态代理
 
